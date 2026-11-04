@@ -4,7 +4,7 @@ import gspread
 from oauth2client.service_account import ServiceAccountCredentials
 import os
 
-st.title("Corrector Automático - Fundamentos de Programación")
+st.title("Entrega de tareas - Fundamentos de Programación")
 
 genai.configure(api_key=st.secrets["GEMINI_API_KEY"])
 model = genai.GenerativeModel("gemini-2.5-flash")
