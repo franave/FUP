@@ -12,7 +12,7 @@ model = genai.GenerativeModel("gemini-1.5-pro")
 scope = ["https://spreadsheets.google.com/feeds", "https://www.googleapis.com/auth/drive"]
 creds = ServiceAccountCredentials.from_json_keyfile_dict(dict(st.secrets["gsheets"]), scope)
 client = gspread.authorize(creds)
-hoja = client.open("Calificaciones_Alumnos").sheet1
+hoja = client.open_by_key("178xpm2yswd2wXJ73Xvh50sVxg7h5CeZTjrM6qpLyb10").sheet1
 
 archivo = st.file_uploader("Sube tu archivo .py (ej: examenRA3_Fran.py)", type=["py"])
 
