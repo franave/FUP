@@ -7,7 +7,7 @@ import time
 
 st.title("Entrega de tareas - Fundamentos de Programación")
 
-# Instancia del nuevo SDK
+# Inicialización correcta con el SDK nuevo (google-genai)
 client = genai.Client(api_key=st.secrets["GEMINI_API_KEY"])
 
 scope = ["https://spreadsheets.google.com/feeds", "https://www.googleapis.com/auth/drive"]
@@ -57,29 +57,30 @@ if archivo is not None and st.button("Evaluar Tarea"):
         else:
             prompt = f"Evalúa el código de {alumno}. {enunciado} {instruccion}"
         
-        with st.spinner("Evaluando con Gemini... (puede tardar si la red aplica retenciones de cuota)"):
+        with st.spinner("Evaluando con Gemini..."):
             intentos = 0
             evaluacion = None
             
             while intentos < 3:
                 try:
+                    # Llamada correcta adaptada a google-genai
                     respuesta = client.models.generate_content(
-                        model="gemini-3.8-flash",
+                        model="gemini-2.5-flash",
                         contents=f"{prompt}\n\nCódigo:\n{codigo}"
                     )
                     evaluacion = respuesta.text
                     break
                 except Exception as e:
                     error_str = str(e)
-                    if "429" in error_str or "ResourceExhausted" in error_str:
+                    if "429" in error_str or "ResourceExhausted" in error_str or "503" in error_str or "UNAVAILABLE" in error_str:
                         intentos += 1
-                        time.sleep(35)
+                        time.sleep(10)
                     else:
                         st.error(f"Fallo de API: {e}")
                         st.stop()
             
             if not evaluacion:
-                st.error("Superadas las peticiones de capa gratuita tras varios reintentos. Prueba más tarde.")
+                st.error("No se pudo completar la evaluación tras varios intentos.")
                 st.stop()
         
         if es_evaluable:
