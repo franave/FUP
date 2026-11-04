@@ -1,18 +1,19 @@
 import streamlit as st
-import google.generativeai as genai
+from google import genai
 import gspread
 from oauth2client.service_account import ServiceAccountCredentials
 import os
+import time
 
 st.title("Entrega de tareas - Fundamentos de Programación")
 
-genai.configure(api_key=st.secrets["GEMINI_API_KEY"])
-model = genai.GenerativeModel("gemini-3.8-flash")
+# Instancia del nuevo SDK
+client = genai.Client(api_key=st.secrets["GEMINI_API_KEY"])
 
 scope = ["https://spreadsheets.google.com/feeds", "https://www.googleapis.com/auth/drive"]
 creds = ServiceAccountCredentials.from_json_keyfile_dict(dict(st.secrets["gsheets"]), scope)
-client = gspread.authorize(creds)
-hoja = client.open_by_key("178xpm2yswd2wXJ73Xvh50sVxg7h5CeZTjrM6qpLyb10").sheet1
+gclient = gspread.authorize(creds)
+hoja = gclient.open_by_key("178xpm2yswd2wXJ73Xvh50sVxg7h5CeZTjrM6qpLyb10").sheet1
 
 archivo = st.file_uploader("Sube tu archivo .py (ej: examenRA3_Fran.py)", type=["py"])
 
@@ -56,28 +57,48 @@ if archivo is not None and st.button("Evaluar Tarea"):
         else:
             prompt = f"Evalúa el código de {alumno}. {enunciado} {instruccion}"
         
-        with st.spinner("Evaluando con Gemini..."):
-            respuesta = model.generate_content(f"{prompt}\n\nCódigo:\n{codigo}")
-            evaluacion = respuesta.text
+        with st.spinner("Evaluando con Gemini... (puede tardar si la red aplica retenciones de cuota)"):
+            intentos = 0
+            evaluacion = None
+            
+            while intentos < 3:
+                try:
+                    respuesta = client.models.generate_content(
+                        model="gemini-3.8-flash",
+                        contents=f"{prompt}\n\nCódigo:\n{codigo}"
+                    )
+                    evaluacion = respuesta.text
+                    break
+                except Exception as e:
+                    error_str = str(e)
+                    if "429" in error_str or "ResourceExhausted" in error_str:
+                        intentos += 1
+                        time.sleep(35)
+                    else:
+                        st.error(f"Fallo de API: {e}")
+                        st.stop()
+            
+            if not evaluacion:
+                st.error("Superadas las peticiones de capa gratuita tras varios reintentos. Prueba más tarde.")
+                st.stop()
         
         if es_evaluable:
-            if es_evaluable:
-                try:
-                    celda_alumno = hoja.find(alumno, in_column=1)
-                    fila = celda_alumno.row
-                except gspread.exceptions.CellNotFound:
-                    fila = len(hoja.col_values(1)) + 1
-                    hoja.update_cell(fila, 1, alumno)
-                    
-                try:
-                    celda_tarea = hoja.find(tarea, in_row=1)
-                    col = celda_tarea.col
-                except gspread.exceptions.CellNotFound:
-                    col = len(hoja.row_values(1)) + 1
-                    hoja.update_cell(1, col, tarea)
+            try:
+                celda_alumno = hoja.find(alumno, in_column=1)
+                fila = celda_alumno.row
+            except gspread.exceptions.CellNotFound:
+                fila = len(hoja.col_values(1)) + 1
+                hoja.update_cell(fila, 1, alumno)
                 
-            hoja.update_cell(fila, col, evaluacion)
+            try:
+                celda_tarea = hoja.find(tarea, in_row=1)
+                col = celda_tarea.col
+            except gspread.exceptions.CellNotFound:
+                col = len(hoja.row_values(1)) + 1
+                hoja.update_cell(1, col, tarea)
             
+            hoja.update_cell(fila, col, evaluacion)
+        
         st.success("Evaluación completada")
         st.write(evaluacion)
         
