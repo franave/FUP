@@ -1,0 +1,15 @@
+Desarrolla un programa en Python que gestione el registro de averías informáticas en las aulas. El programa muestra un menú principal. Pide al usuario que introduzca un número para elegir.
+
+Usa un bucle while para mantener el menú activo hasta que el usuario marque la salida. Emplea bloques if para procesar la opción elegida. Si el usuario teclea una opción que no existe el programa lanza un error. Vuelve a pedir el dato.
+
+Cuando el usuario registra una avería el programa solicita el número de aula y la descripción del fallo. Si el aula introducida es menor que 1 o mayor que 50 lanza una excepción. Avisa al usuario. Valida todos los datos de entrada con bloques try-except. Evita que el programa falle si escriben letras en lugar de números.
+
+Puntuación sobre 10:
+
+Muestra el menú de forma continua (2 puntos).
+
+Controla las opciones mediante condicionales (2.5 puntos).
+
+Captura errores de entrada de datos (3 puntos).
+
+Lanza la excepción de límites si el aula no existe (2.5 puntos).
