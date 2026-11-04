@@ -7,7 +7,6 @@ import time
 
 st.title("Entrega de tareas - Fundamentos de Programación")
 
-# Inicialización correcta con el SDK nuevo (google-genai)
 client = genai.Client(api_key=st.secrets["GEMINI_API_KEY"])
 
 scope = ["https://spreadsheets.google.com/feeds", "https://www.googleapis.com/auth/drive"]
@@ -63,7 +62,6 @@ if archivo is not None and st.button("Evaluar Tarea"):
             
             while intentos < 3:
                 try:
-                    # Llamada correcta adaptada a google-genai
                     respuesta = client.models.generate_content(
                         model="gemini-3.8-flash",
                         contents=f"{prompt}\n\nCódigo:\n{codigo}"
