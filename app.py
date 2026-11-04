@@ -65,7 +65,7 @@ if archivo is not None and st.button("Evaluar Tarea"):
                 try:
                     # Llamada correcta adaptada a google-genai
                     respuesta = client.models.generate_content(
-                        model="gemini-2.5-flash",
+                        model="gemini-3.8-flash",
                         contents=f"{prompt}\n\nCódigo:\n{codigo}"
                     )
                     evaluacion = respuesta.text
