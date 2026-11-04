@@ -1,4 +1,5 @@
 streamlit
 google-genai
-gspread 
+gspread
 oauth2client
+pandas
