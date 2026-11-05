@@ -8,8 +8,21 @@ import time
 from datetime import datetime
 from zoneinfo import ZoneInfo
 import re
+import streamlit.components.v1 as components
 
 st.title("Entrega de tareas - Fundamentos de Programación")
+
+# Componente invisible para capturar la IP real del cliente a través del proxy de Streamlit Cloud
+ip_usuario = "IP no disponible"
+try:
+    # Inyectamos un script ligero para leer cabeceras o usar servicios de eco de IP si es necesario, 
+    # pero en Streamlit Cloud la forma estándar mediante componentes es consultar el entorno de red del navegador del cliente o cabeceras proxy.
+    # Dado que Streamlit no expone request.headers directamente sin componentes avanzados, 
+    # usamos un truco seguro de lectura de cliente web si está disponible en la sesión:
+    if hasattr(st, "context") and hasattr(st.context, "headers"):
+        ip_usuario = st.context.headers.get("X-Forwarded-For", "Desconocida").split(",")[0].strip()
+except Exception:
+    pass
 
 client = genai.Client(api_key=st.secrets["GEMINI_API_KEY"])
 
@@ -19,7 +32,6 @@ gclient = gspread.authorize(creds)
 
 doc = gclient.open_by_key("178xpm2yswd2wXJ73Xvh50sVxg7h5CeZTjrM6qpLyb10")
 
-# Gestión limpia y segura de pestañas
 try:
     hoja_eval = doc.worksheet("Programación")
 except gspread.exceptions.WorksheetNotFound:
@@ -202,7 +214,7 @@ if archivo is not None and st.button("Evaluar Tarea"):
                 st.stop()
         
         fecha_entrega = datetime.now(zona_horaria).strftime("%d/%m/%Y %H:%M:%S")
-        registro_final = f"[{fecha_entrega}]\n{evaluacion}"
+        registro_final = f"[{fecha_entrega} - IP: {ip_usuario}]\n{evaluacion}"
         
         if not celda_alumno:
             fila = len(hoja_activa.col_values(1)) + 1
