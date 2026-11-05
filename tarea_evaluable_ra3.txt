@@ -1,3 +1,5 @@
+Límite: 15/11/2026 23:59
+
 Desarrolla un programa en Python que gestione el registro de averías informáticas en las aulas. El programa muestra un menú principal. Pide al usuario que introduzca un número para elegir.
 
 Usa un bucle while para mantener el menú activo hasta que el usuario marque la salida. Emplea bloques if para procesar la opción elegida. Si el usuario teclea una opción que no existe el programa lanza un error. Vuelve a pedir el dato.
