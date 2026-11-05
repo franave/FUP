@@ -66,7 +66,7 @@ if archivo is not None and st.button("Evaluar Tarea"):
                 try:
                     caja_estado.info(f"Llamando a la API (Intento {intentos + 1}/3)...")
                     respuesta = client.models.generate_content(
-                        model="gemini-3.8-flash",
+                        model="gemini-3.8-pro",
                         contents=f"{prompt}\n\nCódigo:\n{codigo}"
                     )
                     evaluacion = respuesta.text
