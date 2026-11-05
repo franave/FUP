@@ -33,15 +33,20 @@ if archivo is not None and st.button("Evaluar Tarea"):
         es_evaluable = tarea_lower.startswith("tarea_evaluable")
         es_no_evaluable = tarea_lower.startswith("tarea_no_evaluable")
         
-        # Corrección de la excepción obsoleta de gspread
+        try:
+            if not hoja.cell(1, 1).value:
+                hoja.update_cell(1, 1, "Alumno")
+        except Exception:
+            hoja.update_cell(1, 1, "Alumno")
+
         try:
             celda_alumno = hoja.find(alumno, in_column=1)
-        except IndexError:
+        except Exception:
             celda_alumno = None
             
         try:
             celda_tarea = hoja.find(tarea, in_row=1)
-        except IndexError:
+        except Exception:
             celda_tarea = None
             
         if es_examen and celda_alumno and celda_tarea:
