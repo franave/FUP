@@ -26,7 +26,7 @@ except gspread.exceptions.WorksheetNotFound:
     hoja_eval.update_title("Programación")
 
 try:
-    hoja_no_eval = doc.worksheet("No Evaluables Prog")
+    hoja_no_eval = doc.worksheet("Progr. NE")
 except gspread.exceptions.WorksheetNotFound:
     hoja_no_eval = doc.add_worksheet(title="No Evaluables Prog", rows=100, cols=20)
     hoja_no_eval.update_cell(1, 1, "Alumno")
