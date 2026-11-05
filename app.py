@@ -134,7 +134,9 @@ if archivo is not None and st.button("Evaluar Tarea"):
                 "Muestra la nota numérica final. "
                 "Desglosa la puntuación por apartados. "
                 "Para cada apartado donde el alumno no tenga el 100% de la nota, explica el motivo exacto del fallo. "
-                "Cero saludos. No des el código correcto. Si tiene un 10, escribe solo '10 - Perfecto'."
+                "Cero saludos. No des el código correcto. Si tiene un 10, escribe solo '10 - Perfecto'. "
+                "REGLA DE FORMATO: PROHIBIDO usar Markdown. No uses asteriscos (*) ni almohadillas (#). "
+                "Escribe en texto plano puro. Usa MAYÚSCULAS para resaltar los títulos de los apartados y guiones normales (-) para las listas."
             )
         else:
             instruccion = "Indica qué está mal. No des la solución directa ni escribas código correcto. Da una nota orientativa."
