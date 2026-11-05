@@ -36,14 +36,30 @@ ORDEN_COLUMNAS = [
     "Tarea Evaluable RA6", "Examen RA6"
 ]
 
-archivo = st.file_uploader("Sube tu archivo .py (ej: Tarea_Apellido, Nombre.py)", type=["py"])
+archivo = st.file_uploader("Sube tu archivo .py", type=["py"])
 
 if archivo is not None and st.button("Evaluar Tarea"):
     nombre_base = archivo.name.replace(".py", "")
     zona_horaria = ZoneInfo("Europe/Madrid")
     
     try:
-        tarea, alumno = nombre_base.rsplit("_", 1)
+        # Nuevo extractor inteligente de nombres
+        match_tarea = re.match(r'^(.*?[rR][aA]\d+)[_,-]*(.*)$', nombre_base)
+        
+        if match_tarea:
+            tarea = match_tarea.group(1).strip("_")
+            resto_nombre = match_tarea.group(2).strip("_")
+            
+            if "_" in resto_nombre:
+                partes_nombre = resto_nombre.rsplit("_", 1)
+                apellidos = partes_nombre[0].replace("_", " ")
+                nombre = partes_nombre[1]
+                alumno = f"{apellidos}, {nombre}"
+            else:
+                alumno = resto_nombre
+        else:
+            tarea, alumno = nombre_base.rsplit("_", 1)
+            
         codigo = archivo.getvalue().decode("utf-8")
         tarea_lower = tarea.lower()
         
@@ -190,4 +206,4 @@ if archivo is not None and st.button("Evaluar Tarea"):
             st.write(evaluacion)
             
     except ValueError:
-        st.error("Formato inválido. Usa: Tarea_Apellido, Nombre.py")
+        st.error("Formato inválido al procesar el archivo. Revisa el nombre.")
