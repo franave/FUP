@@ -18,12 +18,17 @@ creds = ServiceAccountCredentials.from_json_keyfile_dict(dict(st.secrets["gsheet
 gclient = gspread.authorize(creds)
 
 doc = gclient.open_by_key("178xpm2yswd2wXJ73Xvh50sVxg7h5CeZTjrM6qpLyb10")
-hoja_eval = doc.sheet1
 
 try:
-    hoja_no_eval = doc.worksheet("No Evaluables")
+    hoja_eval = doc.worksheet("Programación")
 except gspread.exceptions.WorksheetNotFound:
-    hoja_no_eval = doc.add_worksheet(title="No Evaluables", rows=100, cols=20)
+    hoja_eval = doc.sheet1
+    hoja_eval.update_title("Programación")
+
+try:
+    hoja_no_eval = doc.worksheet("No Evaluables Prog")
+except gspread.exceptions.WorksheetNotFound:
+    hoja_no_eval = doc.add_worksheet(title="No Evaluables Prog", rows=100, cols=20)
     hoja_no_eval.update_cell(1, 1, "Alumno")
 
 ORDEN_COLUMNAS = [
