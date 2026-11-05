@@ -43,7 +43,6 @@ if archivo is not None and st.button("Evaluar Tarea"):
     zona_horaria = ZoneInfo("Europe/Madrid")
     
     try:
-        # Nuevo extractor inteligente de nombres
         match_tarea = re.match(r'^(.*?[rR][aA]\d+)[_,-]*(.*)$', nombre_base)
         
         if match_tarea:
@@ -131,7 +130,12 @@ if archivo is not None and st.button("Evaluar Tarea"):
                             st.stop()
 
         if es_examen or es_evaluable:
-            instruccion = "Calcula la nota y escribe ÚNICAMENTE el número final. Cero feedback. Cero indicaciones."
+            instruccion = (
+                "Muestra la nota numérica final. "
+                "Desglosa la puntuación por apartados. "
+                "Para cada apartado donde el alumno no tenga el 100% de la nota, explica el motivo exacto del fallo. "
+                "Cero saludos. No des el código correcto. Si tiene un 10, escribe solo '10 - Perfecto'."
+            )
         else:
             instruccion = "Indica qué está mal. No des la solución directa ni escribas código correcto. Da una nota orientativa."
         
