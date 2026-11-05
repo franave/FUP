@@ -87,19 +87,21 @@ if archivo is not None and st.button("Evaluar Tarea"):
                 st.stop()
         
         if es_evaluable:
-            try:
-                celda_alumno = hoja.find(alumno, in_column=1)
-                fila = celda_alumno.row
-            except gspread.exceptions.CellNotFound:
+            celda_alumno = hoja.find(alumno, in_column=1)
+            
+            if celda_alumno is None:
                 fila = len(hoja.col_values(1)) + 1
                 hoja.update_cell(fila, 1, alumno)
+            else:
+                fila = celda_alumno.row
                 
-            try:
-                celda_tarea = hoja.find(tarea, in_row=1)
-                col = celda_tarea.col
-            except gspread.exceptions.CellNotFound:
+            celda_tarea = hoja.find(tarea, in_row=1)
+            
+            if celda_tarea is None:
                 col = len(hoja.row_values(1)) + 1
                 hoja.update_cell(1, col, tarea)
+            else:
+                col = celda_tarea.col
             
             hoja.update_cell(fila, col, evaluacion)
         
