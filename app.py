@@ -19,6 +19,7 @@ gclient = gspread.authorize(creds)
 
 doc = gclient.open_by_key("178xpm2yswd2wXJ73Xvh50sVxg7h5CeZTjrM6qpLyb10")
 
+# Gestión limpia y segura de pestañas
 try:
     hoja_eval = doc.worksheet("Programación")
 except gspread.exceptions.WorksheetNotFound:
@@ -26,10 +27,13 @@ except gspread.exceptions.WorksheetNotFound:
     hoja_eval.update_title("Programación")
 
 try:
-    hoja_no_eval = doc.worksheet("Progr. NE")
+    hoja_no_eval = doc.worksheet("No Evaluables Prog")
 except gspread.exceptions.WorksheetNotFound:
-    hoja_no_eval = doc.add_worksheet(title="No Evaluables Prog", rows=100, cols=20)
-    hoja_no_eval.update_cell(1, 1, "Alumno")
+    try:
+        hoja_no_eval = doc.add_worksheet(title="No Evaluables Prog", rows=100, cols=20)
+        hoja_no_eval.update_cell(1, 1, "Alumno")
+    except Exception:
+        hoja_no_eval = doc.worksheet("No Evaluables Prog")
 
 ORDEN_COLUMNAS = [
     "Alumno",
