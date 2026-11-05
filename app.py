@@ -143,7 +143,8 @@ if archivo is not None and st.button("Evaluar Tarea"):
         
         prompt_base = f"""Evalúa este código de {alumno} para la tarea {tarea}.
         Asigna puntuaciones parciales y decimales. 
-        REGLA ESTRICTA: Si exige una estructura concreta y usa otra, la nota de ese apartado es 0 automáticamente.
+        REGLA ESTRICTA 1: Si exige una estructura concreta y usa otra, la nota de ese apartado es 0 automáticamente.
+        REGLA ESTRICTA 2: Comprueba estrictamente la funcionalidad del código. Penaliza las puntuaciones si el flujo de ejecución carece de sentido lógico o las estructuras están desordenadas.
         {instruccion}
         {enunciado}Criterios aplicados:\n"""
         
