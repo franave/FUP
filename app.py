@@ -16,9 +16,27 @@ client = genai.Client(api_key=st.secrets["GEMINI_API_KEY"])
 scope = ["https://spreadsheets.google.com/feeds", "https://www.googleapis.com/auth/drive"]
 creds = ServiceAccountCredentials.from_json_keyfile_dict(dict(st.secrets["gsheets"]), scope)
 gclient = gspread.authorize(creds)
-hoja = gclient.open_by_key("178xpm2yswd2wXJ73Xvh50sVxg7h5CeZTjrM6qpLyb10").sheet1
 
-archivo = st.file_uploader("Sube tu archivo .py", type=["py"])
+doc = gclient.open_by_key("178xpm2yswd2wXJ73Xvh50sVxg7h5CeZTjrM6qpLyb10")
+hoja_eval = doc.sheet1
+
+try:
+    hoja_no_eval = doc.worksheet("No Evaluables")
+except gspread.exceptions.WorksheetNotFound:
+    hoja_no_eval = doc.add_worksheet(title="No Evaluables", rows=100, cols=20)
+    hoja_no_eval.update_cell(1, 1, "Alumno")
+
+ORDEN_COLUMNAS = [
+    "Alumno",
+    "Tarea Evaluable RA1", "Examen RA1",
+    "Tarea Evaluable RA2", "Examen RA2",
+    "Tarea Evaluable RA3", "Examen RA3",
+    "Tarea Evaluable RA4", "Examen RA4",
+    "Tarea Evaluable RA5", "Examen RA5",
+    "Tarea Evaluable RA6", "Examen RA6"
+]
+
+archivo = st.file_uploader("Sube tu archivo .py (ej: Tarea_Apellido, Nombre.py)", type=["py"])
 
 if archivo is not None and st.button("Evaluar Tarea"):
     nombre_base = archivo.name.replace(".py", "")
@@ -29,31 +47,57 @@ if archivo is not None and st.button("Evaluar Tarea"):
         codigo = archivo.getvalue().decode("utf-8")
         tarea_lower = tarea.lower()
         
-        es_examen = tarea_lower.startswith("examen")
-        es_evaluable = tarea_lower.startswith("tarea_evaluable")
-        es_no_evaluable = tarea_lower.startswith("tarea_no_evaluable")
+        match_ra = re.search(r'(ra\d+)', tarea_lower)
+        ra = match_ra.group(1).upper() if match_ra else ""
         
+        es_examen = "examen" in tarea_lower
+        es_no_evaluable = "tarea_no_evaluable" in tarea_lower
+        es_evaluable = "tarea_evaluable" in tarea_lower and not es_no_evaluable
+        
+        if es_examen:
+            cabecera = f"Examen {ra}".strip()
+            hoja_activa = hoja_eval
+        elif es_evaluable:
+            cabecera = f"Tarea Evaluable {ra}".strip()
+            hoja_activa = hoja_eval
+        else:
+            cabecera = f"No Evaluable {ra}".strip()
+            hoja_activa = hoja_no_eval
+            
         try:
-            if not hoja.cell(1, 1).value:
-                hoja.update_cell(1, 1, "Alumno")
+            if not hoja_activa.cell(1, 1).value:
+                hoja_activa.update_cell(1, 1, "Alumno")
         except Exception:
-            hoja.update_cell(1, 1, "Alumno")
+            hoja_activa.update_cell(1, 1, "Alumno")
 
         try:
-            celda_alumno = hoja.find(alumno, in_column=1)
+            celda_alumno = hoja_activa.find(alumno, in_column=1)
         except Exception:
             celda_alumno = None
             
-        try:
-            celda_tarea = hoja.find(tarea, in_row=1)
-        except Exception:
-            celda_tarea = None
-            
-        if es_examen and celda_alumno and celda_tarea:
-            valor_actual = hoja.cell(celda_alumno.row, celda_tarea.col).value
-            if valor_actual:
-                st.error("Ya se ha recibido el examen y no puedes volver a entregarlo.")
-                st.stop()
+        if hoja_activa == hoja_eval and cabecera in ORDEN_COLUMNAS:
+            col_tarea = ORDEN_COLUMNAS.index(cabecera) + 1
+            try:
+                if not hoja_activa.cell(1, col_tarea).value:
+                    hoja_activa.update_cell(1, col_tarea, cabecera)
+            except Exception:
+                hoja_activa.update_cell(1, col_tarea, cabecera)
+        else:
+            try:
+                celda_tarea = hoja_activa.find(cabecera, in_row=1)
+                col_tarea = celda_tarea.col
+            except Exception:
+                col_tarea = len(hoja_activa.row_values(1)) + 1
+                hoja_activa.update_cell(1, col_tarea, cabecera)
+
+        if es_examen and celda_alumno:
+            try:
+                valor_actual = hoja_activa.cell(celda_alumno.row, col_tarea).value
+                if valor_actual:
+                    st.error("Ya se ha recibido el examen y no puedes volver a entregarlo.")
+                    st.stop()
+            except Exception:
+                pass
 
         enunciado = ""
         ruta_txt = f"{tarea}.txt"
@@ -63,9 +107,9 @@ if archivo is not None and st.button("Evaluar Tarea"):
                 enunciado = f"Enunciado:\n{contenido}\n\n"
                 
                 if es_evaluable:
-                    match = re.search(r"Límite:\s*(\d{2}/\d{2}/\d{4}\s\d{2}:\d{2})", contenido)
-                    if match:
-                        limite = datetime.strptime(match.group(1), "%d/%m/%Y %H:%M").replace(tzinfo=zona_horaria)
+                    match_limite = re.search(r"Límite:\s*(\d{2}/\d{2}/\d{4}\s\d{2}:\d{2})", contenido)
+                    if match_limite:
+                        limite = datetime.strptime(match_limite.group(1), "%d/%m/%Y %H:%M").replace(tzinfo=zona_horaria)
                         if datetime.now(zona_horaria) > limite:
                             st.error("El plazo de entrega ha finalizado.")
                             st.stop()
@@ -129,18 +173,16 @@ if archivo is not None and st.button("Evaluar Tarea"):
         registro_final = f"[{fecha_entrega}]\n{evaluacion}"
         
         if not celda_alumno:
-            fila = len(hoja.col_values(1)) + 1
-            hoja.update_cell(fila, 1, alumno)
+            fila = len(hoja_activa.col_values(1)) + 1
+            hoja_activa.update_cell(fila, 1, alumno)
         else:
             fila = celda_alumno.row
-            
-        if not celda_tarea:
-            col = len(hoja.row_values(1)) + 1
-            hoja.update_cell(1, col, tarea)
-        else:
-            col = celda_tarea.col
         
-        hoja.update_cell(fila, col, registro_final)
+        hoja_activa.update_cell(fila, col_tarea, registro_final)
+        
+        total_filas = len(hoja_activa.col_values(1))
+        if total_filas > 1:
+            hoja_activa.sort((1, 'asc'), range=f'A2:ZZ{total_filas}')
         
         if es_examen or es_evaluable:
             st.success("Recibido correctamente. Se te dará tu nota lo más pronto posible.")
