@@ -56,21 +56,26 @@ if archivo is not None and st.button("Evaluar Tarea"):
         else:
             prompt = f"Evalúa el código de {alumno}. {enunciado} {instruccion}"
         
+        caja_estado = st.empty()
+        
         with st.spinner("Evaluando con Gemini..."):
             intentos = 0
             evaluacion = None
             
             while intentos < 3:
                 try:
+                    caja_estado.info(f"Llamando a la API (Intento {intentos + 1}/3)...")
                     respuesta = client.models.generate_content(
                         model="gemini-3.8-flash",
                         contents=f"{prompt}\n\nCódigo:\n{codigo}"
                     )
                     evaluacion = respuesta.text
+                    caja_estado.empty()
                     break
                 except Exception as e:
                     error_str = str(e)
                     if "429" in error_str or "ResourceExhausted" in error_str or "503" in error_str or "UNAVAILABLE" in error_str:
+                        caja_estado.warning(f"Error de cuota o demanda. Reintentando en 10s...\n\nDetalle técnico: {error_str}")
                         intentos += 1
                         time.sleep(10)
                     else:
