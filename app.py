@@ -211,7 +211,7 @@ if archivo is not None and st.button("Evaluar Tarea"):
                 try:
                     caja_estado.info(f"Conectando (Intento {intentos + 1}/3)...")
                     respuesta = client.models.generate_content(
-                        model="gemini-1.5-pro",
+                        model="gemini-3.8-flash",
                         contents=f"{prompt}\n\nCódigo:\n{codigo}",
                         config=types.GenerateContentConfig(temperature=0.0)
                     )
