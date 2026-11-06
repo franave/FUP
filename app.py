@@ -15,24 +15,29 @@ st.markdown("""
     #MainMenu {visibility: hidden;}
     footer {visibility: hidden;}
     header {visibility: hidden;}
-    .stButton>button {
-        width: 100%; 
-        background-color: #009681; 
-        color: white; 
-        border-radius: 6px;
-        height: 3em;
-        font-weight: bold;
+    .block-container {
+        padding-top: 3rem;
+        max-width: 45rem;
     }
-    .stButton>button:hover {
-        background-color: #007a69;
-        color: white;
+    [data-testid="baseButton-primary"] {
+        background-color: #009681 !important;
+        border-color: #009681 !important;
+        font-weight: 600 !important;
+        font-size: 1.1rem !important;
+        padding: 0.5rem !important;
+    }
+    [data-testid="baseButton-primary"]:hover {
+        background-color: #007a69 !important;
+        border-color: #007a69 !important;
+    }
+    div[data-testid="stFileUploader"] {
+        padding-bottom: 0.5rem;
     }
     </style>
 """, unsafe_allow_html=True)
 
-st.title("💻 Fundamentos de Programación")
-st.markdown("Sube tu script para registrar la entrega.")
-st.divider()
+st.markdown("<h1 style='text-align: center; margin-bottom: 0;'>💻 Fundamentos de Programación</h1>", unsafe_allow_html=True)
+st.markdown("<p style='text-align: center; color: #a3a8b8; font-size: 1.1rem; margin-bottom: 2.5rem;'>Sube tu script para registrar la entrega.</p>", unsafe_allow_html=True)
 
 @st.cache_resource(ttl=3600)
 def conectar_servicios():
@@ -75,9 +80,11 @@ ORDEN_COLUMNAS = [
     "Tarea Evaluable RA6", "Examen RA6"
 ]
 
-archivo = st.file_uploader("Selecciona tu archivo .py", type=["py"], label_visibility="collapsed")
+with st.container(border=True):
+    archivo = st.file_uploader("Selecciona tu archivo .py", type=["py"], label_visibility="collapsed")
+    boton_entrega = st.button("Confirmar Entrega", type="primary", use_container_width=True)
 
-if archivo is not None and st.button("Confirmar Entrega"):
+if archivo is not None and boton_entrega:
     nombre_base = archivo.name.replace(".py", "")
     zona_horaria = ZoneInfo("Europe/Madrid")
     
