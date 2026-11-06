@@ -19,19 +19,9 @@ st.markdown("""
         padding-top: 3rem;
         max-width: 45rem;
     }
-    [data-testid="baseButton-primary"] {
-        background-color: #009681 !important;
-        border-color: #009681 !important;
-        font-weight: 600 !important;
-        font-size: 1.1rem !important;
-        padding: 0.5rem !important;
-    }
-    [data-testid="baseButton-primary"]:hover {
-        background-color: #007a69 !important;
-        border-color: #007a69 !important;
-    }
     div[data-testid="stFileUploader"] {
-        padding-bottom: 0.5rem;
+        padding-bottom: 0rem;
+        margin-bottom: 0rem;
     }
     </style>
 """, unsafe_allow_html=True)
@@ -81,8 +71,13 @@ ORDEN_COLUMNAS = [
 ]
 
 with st.container(border=True):
-    archivo = st.file_uploader("Selecciona tu archivo .py", type=["py"], label_visibility="collapsed")
-    boton_entrega = st.button("Confirmar Entrega", type="primary", use_container_width=True)
+    col_izq, col_der = st.columns([3, 1], vertical_alignment="bottom")
+    
+    with col_izq:
+        archivo = st.file_uploader("Selecciona tu archivo .py", type=["py"], label_visibility="collapsed")
+    
+    with col_der:
+        boton_entrega = st.button("Confirmar Entrega", use_container_width=True)
 
 if archivo is not None and boton_entrega:
     nombre_base = archivo.name.replace(".py", "")
