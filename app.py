@@ -8,39 +8,31 @@ import time
 from datetime import datetime
 from zoneinfo import ZoneInfo
 import re
-import streamlit.components.v1 as components
 
 st.title("Entrega de tareas - Fundamentos de Programación")
 
-# Captura infalible de la IP real del cliente mediante un servicio externo ligero
-if "ip_cliente" not in st.session_state:
-    st.session_state.ip_cliente = "Desconocida"
+def cazar_ip():
+    try:
+        if hasattr(st, "context") and hasattr(st.context, "headers"):
+            cabeceras = st.context.headers
+            for clave in ["X-Forwarded-For", "X-Real-Ip", "Cf-Connecting-Ip", "True-Client-Ip"]:
+                if clave in cabeceras:
+                    ips = cabeceras[clave].split(",")
+                    for ip in ips:
+                        ip = ip.strip()
+                        if ip:
+                            if ip.startswith(("10.", "192.168.", "127.")):
+                                continue
+                            if ip.startswith("172."):
+                                segundo_octeto = int(ip.split(".")[1])
+                                if 16 <= segundo_octeto <= 31:
+                                    continue
+                            return ip
+    except Exception:
+        pass
+    return "Desconocida"
 
-# Componente web invisible para inyectar la IP en la sesión
-ip_component = """
-<script>
-fetch('https://api.ipify.org?format=json')
-.then(response => response.json())
-.then(data => {
-    const parentDoc = window.parent.document;
-    const inputs = parentDoc.querySelectorAll('iframe');
-    // Guardamos la IP en una cookie de sesión o enviamos al stream
-    window.parent.postMessage({type: 'streamlit:setComponentValue', value: data.ip}, '*');
-});
-</script>
-"""
-# Si prefieres una alternativa puramente de servidor sin dependencias externas de JS, 
-# leemos directamente desde la cabecera del entorno si el proxy de Streamlit la inyecta:
-try:
-    if hasattr(st, "context") and hasattr(st.context, "headers"):
-        header_ip = st.context.headers.get("X-Forwarded-For")
-        if header_ip:
-            st.session_state.ip_cliente = header_ip.split(",")[0].strip()
-except Exception:
-    pass
-
-# Si la cabecera nativa está vacía, usamos la tuya de prueba o permitimos la lectura por API
-ip_usuario = st.session_state.ip_cliente
+ip_usuario = cazar_ip()
 
 client = genai.Client(api_key=st.secrets["GEMINI_API_KEY"])
 
@@ -160,11 +152,20 @@ if archivo is not None and st.button("Evaluar Tarea"):
                 contenido = f.read()
                 enunciado = f"Enunciado:\n{contenido}\n\n"
                 
-                if es_evaluable:
+                if es_evaluable or es_examen:
+                    ahora = datetime.now(zona_horaria)
+                    
+                    match_inicio = re.search(r"Inicio:\s*(\d{2}/\d{2}/\d{4}\s\d{2}:\d{2})", contenido)
+                    if match_inicio:
+                        inicio = datetime.strptime(match_inicio.group(1), "%d/%m/%Y %H:%M").replace(tzinfo=zona_horaria)
+                        if ahora < inicio:
+                            st.error("El plazo de entrega aún no ha comenzado.")
+                            st.stop()
+                            
                     match_limite = re.search(r"Límite:\s*(\d{2}/\d{2}/\d{4}\s\d{2}:\d{2})", contenido)
                     if match_limite:
                         limite = datetime.strptime(match_limite.group(1), "%d/%m/%Y %H:%M").replace(tzinfo=zona_horaria)
-                        if datetime.now(zona_horaria) > limite:
+                        if ahora > limite:
                             st.error("El plazo de entrega ha finalizado.")
                             st.stop()
 
@@ -210,7 +211,7 @@ if archivo is not None and st.button("Evaluar Tarea"):
                 try:
                     caja_estado.info(f"Conectando (Intento {intentos + 1}/3)...")
                     respuesta = client.models.generate_content(
-                        model="gemini-3.8-flash",
+                        model="gemini-1.5-pro",
                         contents=f"{prompt}\n\nCódigo:\n{codigo}",
                         config=types.GenerateContentConfig(temperature=0.0)
                     )
