@@ -15,13 +15,28 @@ st.markdown("""
     #MainMenu {visibility: hidden;}
     footer {visibility: hidden;}
     header {visibility: hidden;}
+    /* Eliminar el icono de enlace ancla (🔗) de las cabeceras */
+    .stMarkdown a, a.header-anchor {
+        display: none !important;
+    }
     .block-container {
         padding-top: 3rem;
         max-width: 45rem;
     }
+    /* Estrangular el tamaño del selector de archivos para igualarlo al botón */
     div[data-testid="stFileUploader"] {
         padding-bottom: 0rem;
         margin-bottom: 0rem;
+    }
+    div[data-testid="stFileUploaderDropzone"] {
+        padding: 0.2rem 1rem !important;
+        min-height: 0px !important;
+        display: flex;
+        align-items: center;
+    }
+    div[data-testid="stFileUploaderDropzone"] section {
+        padding: 0rem !important;
+        margin: 0rem !important;
     }
     </style>
 """, unsafe_allow_html=True)
@@ -71,7 +86,7 @@ ORDEN_COLUMNAS = [
 ]
 
 with st.container(border=True):
-    col_izq, col_der = st.columns([3, 1], vertical_alignment="bottom")
+    col_izq, col_der = st.columns([3, 1], vertical_alignment="center")
     
     with col_izq:
         archivo = st.file_uploader("Selecciona tu archivo .py", type=["py"], label_visibility="collapsed")
