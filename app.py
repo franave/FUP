@@ -14,8 +14,8 @@ st.title("Entrega de tareas - Fundamentos de Programación")
 def cazar_ip():
     try:
         if hasattr(st, "context") and hasattr(st.context, "headers"):
-            cabeceras = st.context.headers
-            for clave in ["X-Forwarded-For", "X-Real-Ip", "Cf-Connecting-Ip", "True-Client-Ip"]:
+            cabeceras = {k.lower(): str(v) for k, v in st.context.headers.items()}
+            for clave in ["x-forwarded-for", "cf-connecting-ip", "x-real-ip", "true-client-ip"]:
                 if clave in cabeceras:
                     ips = cabeceras[clave].split(",")
                     for ip in ips:
@@ -24,9 +24,12 @@ def cazar_ip():
                             if ip.startswith(("10.", "192.168.", "127.")):
                                 continue
                             if ip.startswith("172."):
-                                segundo_octeto = int(ip.split(".")[1])
-                                if 16 <= segundo_octeto <= 31:
-                                    continue
+                                try:
+                                    segundo_octeto = int(ip.split(".")[1])
+                                    if 16 <= segundo_octeto <= 31:
+                                        continue
+                                except ValueError:
+                                    pass
                             return ip
     except Exception:
         pass
