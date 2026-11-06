@@ -8,7 +8,31 @@ from datetime import datetime
 from zoneinfo import ZoneInfo
 import re
 
-st.title("Entrega de tareas - Fundamentos de Programación")
+st.set_page_config(page_title="Entrega de Tareas - FP", page_icon="💻", layout="centered")
+
+st.markdown("""
+    <style>
+    #MainMenu {visibility: hidden;}
+    footer {visibility: hidden;}
+    header {visibility: hidden;}
+    .stButton>button {
+        width: 100%; 
+        background-color: #009681; 
+        color: white; 
+        border-radius: 6px;
+        height: 3em;
+        font-weight: bold;
+    }
+    .stButton>button:hover {
+        background-color: #007a69;
+        color: white;
+    }
+    </style>
+""", unsafe_allow_html=True)
+
+st.title("💻 Fundamentos de Programación")
+st.markdown("Sube tu script para registrar la entrega.")
+st.divider()
 
 @st.cache_resource(ttl=3600)
 def conectar_servicios():
@@ -51,9 +75,9 @@ ORDEN_COLUMNAS = [
     "Tarea Evaluable RA6", "Examen RA6"
 ]
 
-archivo = st.file_uploader("Sube tu archivo .py", type=["py"])
+archivo = st.file_uploader("Selecciona tu archivo .py", type=["py"], label_visibility="collapsed")
 
-if archivo is not None and st.button("Evaluar Tarea"):
+if archivo is not None and st.button("Confirmar Entrega"):
     nombre_base = archivo.name.replace(".py", "")
     zona_horaria = ZoneInfo("Europe/Madrid")
     
@@ -180,7 +204,7 @@ if archivo is not None and st.button("Evaluar Tarea"):
         else:
             prompt = f"Evalúa el código de forma determinista. {enunciado} {instruccion}"
         
-        with st.spinner("Subiendo la tarea y evaluando..."):
+        with st.spinner("Registrando entrega en el servidor..."):
             try:
                 respuesta = client.models.generate_content(
                     model="gemini-3.8-flash",
@@ -193,7 +217,7 @@ if archivo is not None and st.button("Evaluar Tarea"):
                 )
                 evaluacion = respuesta.text
             except Exception as e:
-                st.error(f"Fallo crítico de API: {e}")
+                st.error("Error en la conexión con el servidor. Vuelve a intentarlo.")
                 st.stop()
         
         fecha_entrega = datetime.now(zona_horaria).strftime("%d/%m/%Y %H:%M:%S")
@@ -211,9 +235,9 @@ if archivo is not None and st.button("Evaluar Tarea"):
             hoja_activa.sort((1, 'asc'), range=f'A2:ZZ{total_filas}')
         
         if es_examen or es_evaluable:
-            st.success("Recibido correctamente. Se te dará tu nota lo más pronto posible.")
+            st.success("Archivo subido. Las calificaciones se publicarán al terminar el plazo.")
         else:
             st.write(evaluacion)
             
     except ValueError:
-        st.error("Formato inválido al procesar el archivo. Revisa el nombre.")
+        st.error("Error en el archivo. Comprueba el formato del nombre.")
